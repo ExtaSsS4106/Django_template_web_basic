@@ -1,0 +1,1 @@
+# Django_template_web_basic
