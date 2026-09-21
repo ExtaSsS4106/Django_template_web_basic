@@ -1,5 +1,8 @@
 # Django Template Web Basic
 
+[![docs](https://img.shields.io/badge/docs-online-brightgreen)](https://extasss4106.github.io/Django_template_web_basic/)
+[![GitHub](https://img.shields.io/badge/github-repo-blue?logo=github)](https://github.com/ExtaSsS4106/Django_template_web_basic)
+
 Документация к базовому проекту на Django 6.1.1. Проект представляет собой серверный веб-сайт с HTML-шаблонами, регистрацией пользователей, входом через сессии Django и профилем пользователя с необязательным аватаром.
 
 > Этот репозиторий не содержит Django REST Framework, JWT-аутентификацию или JSON API. Описание ниже соответствует текущему коду проекта.
