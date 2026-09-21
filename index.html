@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Django Template Web Basic - документация</title>
+  <style>
+    :root { color-scheme: light; --ink: #1f2933; --muted: #52606d; --line: #d9e2ec; --accent: #0b7285; --paper: #fff; --wash: #f4f7f9; --code: #f8fafc; }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--wash); color: var(--ink); font: 16px/1.65 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+    main { max-width: 980px; margin: 0 auto; padding: 48px 24px 72px; background: var(--paper); min-height: 100vh; }
+    h1 { margin-top: 0; color: #102a43; font-size: clamp(2rem, 5vw, 3.2rem); line-height: 1.1; }
+    h2 { margin-top: 2.5rem; color: #102a43; border-bottom: 1px solid var(--line); padding-bottom: .35rem; }
+    h3 { margin-top: 1.8rem; color: var(--accent); }
+    p, li { max-width: 82ch; }
+    code { background: #e9f5f7; color: #075985; padding: .12rem .35rem; border-radius: 4px; }
+    pre { overflow-x: auto; padding: 16px; border: 1px solid var(--line); border-radius: 6px; background: var(--code); }
+    pre code { padding: 0; background: transparent; color: var(--ink); }
+    table { width: 100%; border-collapse: collapse; margin: 1rem 0 1.5rem; }
+    th, td { border: 1px solid var(--line); padding: 10px 12px; text-align: left; vertical-align: top; }
+    th { background: #e9f5f7; color: #075985; }
+    .lead { color: var(--muted); font-size: 1.15rem; }
+    .note { border-left: 4px solid var(--accent); padding: 12px 16px; background: #eef8fa; }
+    .top-links { margin: 0 0 1.5rem; display: flex; flex-wrap: wrap; gap: 10px; }
+    .top-links a { display: inline-block; padding: 6px 12px; border: 1px solid var(--line); border-radius: 6px; background: #eef8fa; color: var(--accent); text-decoration: none; font-weight: 600; }
+    .top-links a:hover { background: #d9eef2; }
+    @media (max-width: 640px) { main { padding: 32px 16px 48px; } table { font-size: .92rem; } th, td { padding: 8px; } }
+  </style>
+</head>
+<body>
+<main>
+  <h1>Django Template Web Basic</h1>
+  <div class="top-links"><a href="../README.md">README</a></div>
+  <p class="lead">Базовый серверный веб-шаблон на Django с регистрацией, сессионной авторизацией и профилем пользователя.</p>
+  <p class="note"><strong>Важно:</strong> текущий проект не является Django REST Framework API и не использует JWT. Эта страница описывает фактическую реализацию репозитория.</p>
+
+  <h2>Назначение и возможности</h2>
+  <p>Шаблон содержит домашнюю страницу, HTML-формы регистрации и входа, стандартную модель пользователя Django, профиль с необязательным аватаром, SQLite и административную панель.</p>
+  <ul><li>Регистрация с username, обязательным email и подтверждением пароля.</li><li>Сессионный вход и выход через Django auth.</li><li>Автоматическое создание <code>Profiles</code> после регистрации.</li><li>Наследуемые HTML-шаблоны и Bootstrap 5.3.8 через CDN.</li><li>Django 6.1.1 и локальная SQLite-база.</li></ul>
+
+  <h2>Установка и запуск</h2>
+  <pre><code>python -m venv venv
+source venv/bin/activate          # Linux/macOS
+# venv\Scripts\activate       # Windows
+pip install -r req.txt
+python manage.py migrate
+python manage.py check
+python manage.py runserver</code></pre>
+  <p>Сайт будет доступен по адресу <code>http://127.0.0.1:8000/</code>. Админ-панель находится на <code>/admin/</code>.</p>
+  <pre><code>python manage.py createsuperuser
+python manage.py runserver 0.0.0.0:8010</code></pre>
+
+  <h2>Маршруты</h2>
+  <table><thead><tr><th>Метод</th><th>Путь</th><th>Назначение</th><th>Доступ</th></tr></thead><tbody>
+    <tr><td>GET</td><td><code>/</code></td><td>Домашняя страница, шаблон <code>main/main.html</code>.</td><td>Все</td></tr>
+    <tr><td>GET, POST</td><td><code>/sign-up/</code></td><td>Регистрация пользователя через <code>RegisterForm</code>.</td><td>Все</td></tr>
+    <tr><td>GET, POST</td><td><code>/login/</code></td><td>Стандартный <code>LoginView</code> Django.</td><td>Все</td></tr>
+    <tr><td>GET, POST</td><td><code>/login_/</code></td><td>Дополнительный ручной обработчик входа.</td><td>Все</td></tr>
+    <tr><td>GET</td><td><code>/logout/</code></td><td>Удаление текущей сессии.</td><td>Авторизованные</td></tr>
+    <tr><td>GET</td><td><code>/admin/</code></td><td>Административная панель.</td><td>Staff</td></tr>
+  </tbody></table>
+  <p>Маршрут <code>/login/</code> появляется из <code>django.contrib.auth.urls</code>. Маршрут <code>/login_/</code> объявлен в <code>mainapp/urls.py</code>. Рекомендуется оставить один вариант входа.</p>
+
+  <h2>Регистрация</h2>
+  <p>Форма на <code>POST /sign-up/</code> принимает поля <code>username</code>, <code>email</code>, <code>password1</code> и <code>password2</code>. После успешной проверки создаётся <code>User</code>, создаётся связанный <code>Profiles</code>, затем пользователь автоматически входит и перенаправляется на главную страницу.</p>
+  <p>Форма использует CSRF-защиту. Проверки пароля выполняются стандартным <code>UserCreationForm</code> и настройками <code>AUTH_PASSWORD_VALIDATORS</code>.</p>
+
+  <h2>Профиль и модели</h2>
+  <pre><code>Profiles
+  id      BigAutoField
+  user    OneToOneField(User, related_name="profile", on_delete=CASCADE)
+  avatar  FileField(upload_to="avatars/", null=True)</code></pre>
+  <p>Обратный доступ к профилю: <code>request.user.profile</code>. Поле аватара пока не подключено к HTML-форме, а настройки <code>MEDIA_ROOT</code> и <code>MEDIA_URL</code> отсутствуют.</p>
+
+  <h2>Структура</h2>
+  <pre><code>manage.py                 команды Django
+src/settings.py           настройки проекта
+src/urls.py               корневые URL
+mainapp/views.py          views главной страницы и auth
+mainapp/forms.py          RegisterForm
+mainapp/models.py         Profiles
+mainapp/urls.py           маршруты приложения
+mainapp/migrations/       миграции
+templates/main/           базовые шаблоны сайта
+templates/registration/   login и registration
+DOCS/                     документация</code></pre>
+
+  <h2>Миграции и проверки</h2>
+  <pre><code>python manage.py makemigrations
+python manage.py migrate
+python manage.py showmigrations
+python manage.py test
+python manage.py shell</code></pre>
+  <p>Миграция <code>0002</code> удаляет старые модели <code>Staff</code>, <code>Users</code>, <code>StaffInfo</code> и <code>Sessions</code>, добавляя актуальную модель <code>Profiles</code>.</p>
+
+  <h2>Известные ограничения</h2>
+  <ul><li>В <code>settings.py</code> включён <code>DEBUG = True</code>, а <code>ALLOWED_HOSTS</code> разрешает все хосты.</li><li><code>SECRET_KEY</code> хранится в исходном коде.</li><li>В навигации есть ссылки <code>profile</code> и <code>my_sessions</code>, но маршруты для них не определены.</li><li>Главная страница пока не содержит контента в блоке <code>content</code>.</li><li>Тесты и регистрация аватара ещё не реализованы.</li><li>Bootstrap загружается с CDN.</li></ul>
+
+  <h2>Production checklist</h2>
+  <ul><li>Вынести секреты в переменные окружения.</li><li>Отключить debug и ограничить allowed hosts.</li><li>Настроить HTTPS, secure cookies и CSRF trusted origins.</li><li>Добавить static/media storage и безопасную обработку файлов.</li><li>Настроить WSGI/ASGI-сервер, логирование и резервные копии.</li><li>Добавить тесты регистрации, входа, выхода и создания профиля.</li></ul>
+</main>
+</body>
+</html>
